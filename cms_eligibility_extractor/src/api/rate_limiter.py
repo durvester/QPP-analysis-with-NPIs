@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RateLimitConfig:
     """Configuration for rate limiting."""
-    requests_per_second: float = 2.0
-    burst_requests: int = 5
+    requests_per_second: float = 4.0
+    burst_requests: int = 10
     retry_delay: float = 1.0
     max_retry_delay: float = 8.0
     backoff_factor: float = 2.0

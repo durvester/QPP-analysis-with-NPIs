@@ -222,9 +222,9 @@ class TestNPIReader:
         csv_file = self.create_test_csv([])
         reader = NPIReader(csv_file)
         
-        # Should handle empty file gracefully
-        npis = reader.read_npis()
-        assert len(npis) == 0
+        # Should raise error for empty file (no headers/columns)
+        with pytest.raises(ValueError, match="NPI column 'NPI' not found"):
+            npis = reader.read_npis()
         
         # Cleanup
         Path(csv_file).unlink()

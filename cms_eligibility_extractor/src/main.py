@@ -6,16 +6,30 @@ import os
 import sys
 import argparse
 import logging
+from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
 import yaml
 
-# Add the src directory to the path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add the parent directory to the path so we can import from src
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from api.cms_client import CMSEligibilityClient
-from processors.multi_year_orchestrator import MultiYearOrchestrator
-from exporters.csv_exporter import CSVExporter
+from src.api.cms_client import CMSEligibilityClient
+from src.processors.multi_year_orchestrator import MultiYearOrchestrator
+from src.exporters.csv_exporter import CSVExporter
+
+
+def parse_years(years_str: str) -> List[int]:
+    """Parse comma-separated years string into list of integers."""
+    try:
+        years = [int(year.strip()) for year in years_str.split(',')]
+        # Validate years are reasonable (2017-2030)
+        for year in years:
+            if year < 2017 or year > 2030:
+                raise ValueError(f"Year {year} is outside valid range (2017-2030)")
+        return sorted(years)
+    except ValueError as e:
+        raise ValueError(f"Invalid years configuration '{years_str}': {e}")
 
 
 def setup_logging(log_level: str = "INFO", log_file: str = None):
@@ -49,7 +63,7 @@ def load_configuration():
     
     config = {
         # Input configuration
-        'npi_csv_path': os.getenv('NPI_CSV_PATH', '../NPI.csv'),
+        'npi_csv_path': os.getenv('NPI_CSV_PATH', '../templates/npi_template.csv'),
         
         # Output configuration
         'output_base_dir': os.getenv('OUTPUT_BASE_DIR', './outputs'),
@@ -58,7 +72,7 @@ def load_configuration():
         'save_raw_responses': os.getenv('SAVE_RAW_RESPONSES', 'true').lower() == 'true',
         
         # Processing configuration
-        'years': [2023, 2024, 2025],  # Default years
+        'years': parse_years(os.getenv('EXTRACTION_YEARS', '2023,2024,2025')),
         'batch_size': int(os.getenv('BATCH_SIZE', '100')),
         'checkpoint_interval': int(os.getenv('CHECKPOINT_INTERVAL', '1000')),
         
@@ -188,7 +202,8 @@ Examples:
         all_results = orchestrator.process_all_years(
             progress_callback=progress_callback,
             save_raw_responses=config['save_raw_responses'],
-            checkpoint_interval=config['checkpoint_interval']
+            checkpoint_interval=config['checkpoint_interval'],
+            parallel=True
         )
         
         # Export data

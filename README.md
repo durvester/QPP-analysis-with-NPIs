@@ -4,68 +4,89 @@ A comprehensive Python application for extracting healthcare provider eligibilit
 
 ## 🎯 Overview
 
-This system extracts eligibility data for **2023, 2024, and 2025** from approximately **45,000 NPIs**, processing them through the CMS QPP API and generating clean, analyzable CSV files. The system handles rate limiting, API errors, and provides comprehensive audit trails.
+This system extracts eligibility data from the CMS QPP API for any list of NPIs and any combination of years (2017-2030). The system processes NPIs through the CMS QPP API and generates clean, analyzable CSV files organized by year. Perfect for healthcare data analysts, researchers, and organizations working with Medicare provider data.
 
 ## ✨ Key Features
 
-- **Multi-Year Support**: Extract data for 2023, 2024, and 2025 simultaneously
-- **Flexible Schema**: Handles all possible API response fields gracefully
-- **Rate Limiting**: Built-in exponential backoff for API rate limits (429 responses)
-- **Error Handling**: Graceful handling of 404s, 400s, and server errors
-- **Normalized CSV Output**: Clean, relational CSV files instead of unwieldy 133+ column files
-- **Resume Capability**: Checkpoint system allows resuming interrupted processing
-- **Raw Response Logging**: Complete audit trail for debugging discrepancies
-- **Progress Tracking**: Real-time progress bars and detailed statistics
-- **Production Ready**: Comprehensive logging, configuration, and CLI interface
+- **🗓️ Flexible Year Selection**: Extract data for any years from 2017-2030 
+- **📊 Any NPI List**: Works with any CSV file containing an "NPI" column
+- **🚀 Parallel Processing**: Process multiple years simultaneously for faster extraction
+- **📈 Optimized Performance**: 4 requests/second with smart rate limiting
+- **🔄 Resume Capability**: Checkpoint system allows resuming interrupted processing
+- **📁 Organized Output**: Year-based folder structure (2023/, 2024/, 2025/)
+- **🧹 Normalized CSV**: Clean relational tables instead of 133+ column files
+- **📝 Complete Audit Trail**: Raw JSON responses saved for debugging
+- **⚡ Production Ready**: Comprehensive logging, configuration, and CLI interface
 
-## 📊 Expected Output
+## 📋 Prerequisites
 
-- **Processing Time**: 8-12 hours for ~45K NPIs across 3 years
-- **Success Rate**: ~85% (some NPIs will return 404s, which is expected)
-- **Clean Data**: Only successful 200 responses included in final CSV files
-- **File Sizes**: ~30-50MB per CSV file per year
+- **Python 3.8+**
+- **CSV file with "NPI" column** (case-sensitive)
+- **Internet connection** for CMS API access
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Python 3.8+
-- Internet connection for CMS API access
-- NPIs in CSV format (see `NPI.csv` example)
-
-### Installation
+### 1. **Clone & Setup**
 
 ```bash
 # Clone the repository
 git clone https://github.com/your-username/eligibility-api-qpp.git
 cd eligibility-api-qpp/cms_eligibility_extractor
 
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
-
-# Configure environment (optional)
-cp .env.example .env
-# Edit .env with your preferred settings
 ```
 
-### Basic Usage
+### 2. **Prepare Your NPI File**
+
+Create a CSV file with your NPIs. **The only requirement is an "NPI" column** (case-sensitive):
+
+```csv
+NPI,ProviderName,Specialty
+1234567890,Dr. John Smith,Cardiology
+9876543210,Dr. Jane Doe,Family Medicine
+5555555555,Sample Medical Group,Multi-Specialty
+```
+
+📋 **Use the template**: Copy `templates/npi_template.csv` as a starting point.
+
+### 3. **Configure (Optional)**
 
 ```bash
-# Test the setup (loads NPIs without making API calls)
+# Copy the template
+cp templates/.env.example .env
+
+# Edit with your settings
+EXTRACTION_YEARS=2023,2024,2025
+NPI_CSV_PATH=../your_npis.csv
+```
+
+### 4. **Run Extraction**
+
+```bash
+# Test setup (no API calls)
 python src/main.py --dry-run
 
-# Extract data for all years (2023, 2024, 2025)
+# Extract data for default years (2023,2024,2025)
 python src/main.py
 
-# Extract specific years only
-python src/main.py --years 2023 2024
+# Extract specific years
+EXTRACTION_YEARS=2024 python src/main.py
 
 # Use custom NPI file
-python src/main.py --npi-csv /path/to/your/npis.csv
-
-# Custom output directory
-python src/main.py --output-dir /path/to/output
+python src/main.py --npi-csv ../your_npis.csv
 ```
+
+## 📊 Performance & Timing
+
+- **Small lists** (10-100 NPIs): ~1-5 minutes
+- **Medium lists** (1,000 NPIs): ~15-30 minutes  
+- **Large lists** (10,000+ NPIs): ~2-6 hours
+- **Success Rate**: ~65% (404s are normal for inactive providers)
 
 ### Running Tests
 
@@ -79,28 +100,42 @@ pytest tests/ -v
 
 ## 📁 Output Structure
 
-The system generates a well-organized output structure:
+**Year-organized, clean output structure:**
 
 ```
 outputs/
-├── csv/                          # Clean CSV files for analysis
-│   ├── providers_2023.csv         # Core provider information
-│   ├── organizations_2023.csv     # Organization details
-│   ├── individual_scenarios_2023.csv  # Individual eligibility data
-│   ├── group_scenarios_2023.csv   # Group eligibility data
-│   ├── apms_2023.csv              # Alternative Payment Model data
-│   ├── virtual_groups_2023.csv    # Virtual group information
-│   ├── [...same files for 2024, 2025...]
-│   ├── data_dictionary.csv        # Field descriptions
-│   └── export_summary.csv         # Processing summary
+├── csv/                          # Clean CSV files organized by year
+│   ├── 2023/                     # 2023 data files
+│   │   ├── providers_2023.csv    # Core provider information
+│   │   ├── organizations_2023.csv # Organization details  
+│   │   ├── individual_scenarios_2023.csv
+│   │   ├── group_scenarios_2023.csv
+│   │   └── apms_2023.csv         # Alternative Payment Models
+│   ├── 2024/                     # 2024 data files
+│   │   └── [...same structure...]
+│   ├── 2025/                     # 2025 data files  
+│   │   └── [...same structure...]
+│   ├── data_dictionary.csv       # Field descriptions (global)
+│   └── export_summary.csv        # Processing summary (all years)
 ├── raw/                          # Raw JSON responses for audit
-│   ├── 2023/
-│   ├── 2024/
-│   └── 2025/
+│   ├── 2023/, 2024/, 2025/       # Raw API responses by year
 ├── logs/                         # Processing logs and checkpoints
 └── reports/                      # Processing statistics
     └── processing_summary.json
 ```
+
+## 🔧 Configuration Options
+
+Set these environment variables or use command-line arguments:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EXTRACTION_YEARS` | `2023,2024,2025` | Comma-separated years to extract |
+| `NPI_CSV_PATH` | `../templates/npi_template.csv` | Path to your NPI CSV file |
+| `OUTPUT_BASE_DIR` | `./outputs` | Base output directory |
+| `BATCH_SIZE` | `100` | NPIs to process in each batch |
+| `CHECKPOINT_INTERVAL` | `1000` | Save progress every N NPIs |
+| `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
 
 ## 📋 CSV File Structure
 

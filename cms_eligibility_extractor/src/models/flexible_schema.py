@@ -5,7 +5,7 @@ Handles optional fields gracefully and validates data types.
 
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
 
@@ -219,7 +219,7 @@ class VirtualGroup(BaseModel):
 
 class Organization(BaseModel):
     """Organization/practice information."""
-    TIN: str = Field(..., description="Taxpayer Identification Number (required)")
+    TIN: Optional[str] = Field(None, description="Taxpayer Identification Number")
     prvdrOrgName: Optional[str] = None
     isFacilityBased: Optional[bool] = None
     addressLineOne: Optional[str] = None
@@ -259,14 +259,16 @@ class ProviderData(BaseModel):
     # Deprecated specialty field (handle gracefully)
     specialty: Optional[Specialty] = None
 
-    @validator('npi')
+    @field_validator('npi')
+    @classmethod
     def validate_npi(cls, v):
         """Validate NPI format (10 digits)."""
         if not v.isdigit() or len(v) != 10:
             raise ValueError('NPI must be exactly 10 digits')
         return v
 
-    @validator('firstApprovedDate', pre=True)
+    @field_validator('firstApprovedDate', mode='before')
+    @classmethod
     def validate_date_format(cls, v):
         """Handle various date formats."""
         if v is None:
