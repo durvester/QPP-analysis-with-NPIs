@@ -1,0 +1,6 @@
+{
+    "error": {
+      "type": "NoProviderInformation",
+      "message": "No individual clinician information exists for this NPI"
+    }
+  }

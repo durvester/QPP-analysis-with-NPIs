@@ -1,0 +1,35 @@
+# Core dependencies
+requests>=2.31.0
+pydantic>=2.5.0
+pandas>=2.1.0
+python-dotenv>=1.0.0
+
+# Data export dependencies
+openpyxl>=3.1.2
+xlsxwriter>=3.1.9
+
+# Database dependencies
+sqlite3
+
+# Configuration and logging
+PyYAML>=6.0.1
+structlog>=23.2.0
+
+# Development and testing dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+pytest-asyncio>=0.21.0
+requests-mock>=1.11.0
+
+# Type checking and code quality
+mypy>=1.7.0
+black>=23.11.0
+isort>=5.12.0
+flake8>=6.1.0
+
+# Progress tracking
+tqdm>=4.66.0
+
+# Data validation
+jsonschema>=4.20.0

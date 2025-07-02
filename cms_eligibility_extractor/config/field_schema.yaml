@@ -1,0 +1,106 @@
+provider_core_fields:
+  required:
+    - npi
+    - firstName
+    - lastName
+  optional:
+    - middleName
+    - nationalProviderIdentifierType
+    - firstApprovedDate
+    - yearsInMedicare
+    - pecosEnrollmentDate
+    - newlyEnrolled
+    - qpStatus
+    - isMaqi
+    - qpScoreType
+    - amsMipsEligibleClinician
+
+organization_fields:
+  required:
+    - TIN
+  optional:
+    - prvdrOrgName
+    - isFacilityBased
+    - addressLineOne
+    - addressLineTwo
+    - city
+    - zip
+    - state
+    - hospitalVbpName
+
+individual_scenario_fields:
+  optional:
+    - aciHardship
+    - aciReweighting
+    - aggregationLevel
+    - ambulatorySurgicalCenter
+    - eligibilityScenario
+    - extremeHardship
+    - extremeHardshipEventType
+    - hasHospitalVbpCCN
+    - hasPaymentAdjustmentCCN
+    - hospitalBasedClinician
+    - hospitalVbpName
+    - hospitalVbpScore
+    - hpsaClinician
+    - iaStudy
+    - isFacilityBased
+    - isOptedIn
+    - isOptInEligible
+    - lowVolumeServices
+    - lowVolumeSwitch
+    - mipsEligibleSwitch
+    - nonPatientFacing
+    - optInDecisionDate
+    - ruralClinician
+    - smallGroupPractitioner
+    - specialtyCode
+
+nested_objects:
+  extremeHardshipReasons:
+    - quality
+    - improvementActivities
+    - aci
+    - cost
+  isEligible:
+    - individual
+    - group
+    - mipsApm
+    - virtualGroup
+  specialty:
+    - specialtyDescription
+    - categoryReference
+    - typeDescription
+
+array_fields:
+  - extremeHardshipSources
+  - lowVolumeStatusReasons
+  - organizations
+  - apms
+  - virtualGroups
+
+validation_rules:
+  qpStatus:
+    allowed_values: ["Y", "N", "P", "Q", "R"]
+  qpScoreType:
+    allowed_values: ["MI", "ME", "AE", "AT", "AI"]
+  nationalProviderIdentifierType:
+    allowed_values: [1, 2]
+  aggregationLevel:
+    allowed_values: [1, 2]
+
+csv_output_sets:
+  core:
+    - npi
+    - firstName
+    - lastName
+    - nationalProviderIdentifierType
+    - qpStatus
+    - amsMipsEligibleClinician
+    - yearsInMedicare
+    - newlyEnrolled
+    - qpScoreType
+    - isMaqi
+  
+  extended:
+    includes_all_fields: true

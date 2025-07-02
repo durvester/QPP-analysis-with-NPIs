@@ -1,0 +1,22 @@
+api:
+  base_url: "https://qpp.cms.gov"
+  endpoint: "/api/eligibility/npi/{npi}"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 1.0
+  max_retry_delay: 8.0
+  backoff_factor: 2.0
+  
+rate_limiting:
+  requests_per_second: 2
+  burst_requests: 5
+  rate_limit_status_code: 429
+  
+years:
+  - 2023
+  - 2024
+  - 2025
+  
+headers:
+  accept: "application/vnd.qpp.cms.gov.v6+json"
+  user_agent: "CMS-Eligibility-Extractor/1.0"

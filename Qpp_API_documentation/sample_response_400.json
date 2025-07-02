@@ -1,0 +1,6 @@
+{
+    "error": {
+      "type": "InvalidFormatNpi",
+      "message": "Please supply a valid NPI"
+    }
+  }

@@ -1,0 +1,207 @@
+{
+    "data": {
+      "firstName": "Buffy",
+      "middleName": "A",
+      "lastName": "Summers",
+      "npi": "1234567890",
+      "nationalProviderIdentifierType": 1,
+      "firstApprovedDate": "2010-12-31",
+      "yearsInMedicare": 7,
+      "pecosEnrollmentDate": 2010,
+      "newlyEnrolled": false,
+      "qpStatus": "Q",
+      "isMaqi": true,
+      "qpScoreType": "MI",
+      "amsMipsEligibleClinician": true,
+      "organizations": [
+        {
+          "TIN": "XXXXXXXXXX",
+          "prvdrOrgName": "Scooby Gang Health Partners",
+          "isFacilityBased": true,
+          "addressLineOne": "1630 REVELLO DR SUITE 1",
+          "addressLineTwo": "",
+          "city": "SUNNYDALE",
+          "zip": "000261234",
+          "state": "CA",
+          "hospitalVbpName": "Johnson Medical Center",
+          "individualScenario": {
+            "aciHardship": true,
+            "aciReweighting": true,
+            "aggregationLevel": 1,
+            "ambulatorySurgicalCenter": false,
+            "eligibilityScenario": 2300,
+            "extremeHardship": true,
+            "extremeHardshipEventType": "Natural Disaster",
+            "extremeHardshipReasons": {
+              "quality": true,
+              "improvementActivities": true,
+              "aci": true,
+              "cost": true
+            },
+            "extremeHardshipSources": [
+              "auto-fema"
+            ],
+            "hasHospitalVbpCCN": true,
+            "hasPaymentAdjustmentCCN": true,
+            "hospitalBasedClinician": false,
+            "hospitalVbpName": "Johnson Medical Center",
+            "hospitalVbpScore": 145.78,
+            "hpsaClinician": true,
+            "iaStudy": false,
+            "isEligible": {
+              "individual": false,
+              "group": false,
+              "mipsApm": false,
+              "virtualGroup": false
+            },
+            "isFacilityBased": true,
+            "isOptedIn": true,
+            "isOptInEligible": true,
+            "lowVolumeServices": 23,
+            "lowVolumeStatusReasons": [
+              {
+                "lowVolStusRsnCd": "BOTH",
+                "lowVolStusRsnDesc": "Both the unique beneficiaries and Part B"
+              }
+            ],
+            "lowVolumeSwitch": true,
+            "mipsEligibleSwitch": false,
+            "nonPatientFacing": true,
+            "optInDecisionDate": "2019-09-13T00:00:00.000Z",
+            "ruralClinician": false,
+            "smallGroupPractitioner": false,
+            "specialty": {
+              "specialtyDescription": "Psychiatry",
+              "categoryReference": "Physicians",
+              "typeDescription": "Doctor of Medicine"
+            },
+            "specialtyCode": "72"
+          },
+          "groupScenario": {
+            "aciHardship": true,
+            "aciReweighting": true,
+            "aggregationLevel": 1,
+            "ambulatorySurgicalCenter": false,
+            "extremeHardship": true,
+            "extremeHardshipEventType": "Natural Disaster",
+            "extremeHardshipReasons": {
+              "quality": true,
+              "improvementActivities": true,
+              "aci": true,
+              "cost": true
+            },
+            "extremeHardshipSources": [
+              "auto-fema"
+            ],
+            "hospitalBasedClinician": false,
+            "hpsaClinician": true,
+            "iaStudy": false,
+            "isEligible": {
+              "group": false
+            },
+            "isFacilityBased": true,
+            "isOptedIn": true,
+            "isOptInEligible": true,
+            "lowVolumeServices": 23,
+            "lowVolumeStatusReasons": [
+              {
+                "lowVolStusRsnCd": "BOTH",
+                "lowVolStusRsnDesc": "Both the unique beneficiaries and Part B"
+              }
+            ],
+            "lowVolumeSwitch": true,
+            "mipsEligibleSwitch": false,
+            "nonPatientFacing": true,
+            "optInDecisionDate": "2019-09-13T00:00:00.000Z",
+            "ruralClinician": false,
+            "smallGroupPractitioner": false
+          },
+          "apms": [
+            {
+              "entityName": "Woodlawn Accountable Care Organization, LLC",
+              "lvtFlag": false,
+              "lvtPayments": 16384865.97,
+              "lvtPatients": 147241,
+              "lvtSmallStatus": true,
+              "lvtPerformanceYear": 2017,
+              "apmId": "08",
+              "apmName": "Medicare Shared Savings Program Accountable Care\nOrganizations\n",
+              "subdivisionId": "01",
+              "subdivisionName": "MSSP ACO - Track 1",
+              "advancedApmFlag": false,
+              "mipsApmFlag": true,
+              "providerRelationshipCode": "P",
+              "qpPatientScores": {
+                "ae": 1234,
+                "ai": 1234,
+                "at": 1234,
+                "me": 1234,
+                "mi": 1234
+              },
+              "qpPaymentScores": {
+                "ae": 1234,
+                "ai": 1234,
+                "at": 1234,
+                "me": 1234,
+                "mi": 1234
+              },
+              "complexPatientScore": 3.29,
+              "finalQpcScore": 999.9,
+              "extremeHardship": true,
+              "extremeHardshipReasons": {
+                "quality": true,
+                "improvementActivities": true,
+                "aci": true,
+                "cost": true
+              },
+              "extremeHardshipEventType": "Natural Disaster",
+              "extremeHardshipSources": [
+                "auto-fema"
+              ],
+              "isOptedIn": true
+            }
+          ],
+          "virtualGroups": [
+            {
+              "virtualGroupIdentifier": "XXXXXX",
+              "claimsTypes": "CAH2",
+              "lowVolumeSwitch": true,
+              "lowVolumeStatusReasons": [
+                {
+                  "lowVolStusRsnCd": "BOTH",
+                  "lowVolStusRsnDesc": "Both the unique beneficiaries and Part B"
+                }
+              ],
+              "beneficiaryCount": 5,
+              "allowedCharges": 91.25,
+              "hospitalVbpName": "Johnson Medical Center",
+              "isFacilityBased": true,
+              "hospitalVbpScore": 145.78,
+              "specialScenario": {
+                "aciReweighting": true,
+                "nonPatientFacing": true,
+                "ruralClinician": false,
+                "hpsaClinician": true,
+                "hospitalBasedClinician": false,
+                "ambulatorySurgicalCenter": false,
+                "aciHardship": true,
+                "iaStudy": false,
+                "smallGroupPractitioner": false,
+                "extremeHardship": true,
+                "extremeHardshipReasons": {
+                  "quality": true,
+                  "improvementActivities": true,
+                  "aci": true,
+                  "cost": true
+                },
+                "extremeHardshipEventType": "Natural Disaster",
+                "extremeHardshipSources": [
+                  "auto-fema"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
