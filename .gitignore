@@ -147,9 +147,20 @@ Thumbs.db
 # Project specific
 cms_eligibility_extractor/outputs/
 cms_eligibility_extractor/logs/
-*.csv
-*.json
+cms_eligibility_extractor/venv/
 *.log
+
+# Real data files (exclude from repository)
+NPI.csv
+*_npi.csv
+npi_*.csv
+sample_outputs/
+small_npi_test.csv
+
+# Generated output files
+*.csv
+!templates/*.csv
+*.json
 
 # Sensitive data
 *.env

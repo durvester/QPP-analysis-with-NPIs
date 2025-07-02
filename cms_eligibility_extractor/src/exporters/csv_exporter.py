@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from datetime import datetime
-from dataclasses import asdict, fields
+# dataclasses not needed - using Pydantic models
 
 from ..models.output_models import (
     ProviderCoreRecord, OrganizationRecord, IndividualScenarioRecord,
@@ -154,8 +154,8 @@ class CSVExporter:
         if not records:
             return 0
         
-        # Get field names from the model class
-        field_names = [field.name for field in fields(model_class)]
+        # Get field names from the Pydantic model class
+        field_names = list(model_class.model_fields.keys())
         
         try:
             with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
@@ -164,8 +164,11 @@ class CSVExporter:
                 
                 for record in records:
                     # Convert record to dictionary
-                    if hasattr(record, 'dict'):
-                        # Pydantic model
+                    if hasattr(record, 'model_dump'):
+                        # Pydantic v2 model
+                        record_dict = record.model_dump()
+                    elif hasattr(record, 'dict'):
+                        # Pydantic v1 model (fallback)
                         record_dict = record.dict()
                     elif hasattr(record, '__dict__'):
                         # Regular class instance
@@ -230,10 +233,27 @@ class CSVExporter:
         all_output_files = {}
         
         for year, year_records in multi_year_records.items():
-            year_files = self.export_year_data(year, year_records, overwrite)
-            all_output_files[year] = year_files
+            # Create year-specific output directory
+            year_output_dir = self.output_directory / str(year)
+            year_output_dir.mkdir(exist_ok=True)
+            
+            # Temporarily update output directory for this year
+            original_output_dir = self.output_directory
+            self.output_directory = year_output_dir
+            
+            try:
+                year_files = self.export_year_data(year, year_records, overwrite)
+                all_output_files[year] = year_files
+            finally:
+                # Restore original output directory
+                self.output_directory = original_output_dir
         
         logger.info("Multi-year CSV export completed")
+        
+        # Create global data dictionary and summary files
+        self._create_global_data_dictionary()
+        self._create_global_export_summary(multi_year_records)
+        
         return all_output_files
     
     def create_data_dictionary(self, output_file: Optional[str] = None) -> str:
@@ -460,3 +480,36 @@ class CSVExporter:
             validation_report['file_details'][str(file_path)] = file_details
         
         return validation_report
+    
+    def _create_global_data_dictionary(self) -> str:
+        """Create a global data dictionary file in the main output directory."""
+        output_file = self.output_directory / 'data_dictionary.csv'
+        return self.create_data_dictionary(str(output_file))
+    
+    def _create_global_export_summary(self, multi_year_records: Dict[int, Dict[str, List[Any]]]) -> str:
+        """Create a global export summary file in the main output directory."""
+        output_file = self.output_directory / 'export_summary.csv'
+        
+        try:
+            with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Year', 'Table', 'Record Count', 'Export Status'])
+                
+                total_records = 0
+                for year in sorted(multi_year_records.keys()):
+                    year_records = multi_year_records[year]
+                    for table_name, records in year_records.items():
+                        record_count = len(records) if records else 0
+                        status = 'Success' if record_count > 0 else 'No Data'
+                        writer.writerow([year, table_name, record_count, status])
+                        total_records += record_count
+                
+                # Add total summary row
+                writer.writerow(['TOTAL', 'ALL TABLES', total_records, 'Summary'])
+            
+            logger.info(f"Global export summary created: {output_file}")
+            return str(output_file)
+            
+        except Exception as e:
+            logger.error(f"Error creating global export summary: {e}")
+            raise

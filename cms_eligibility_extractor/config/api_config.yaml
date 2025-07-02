@@ -8,8 +8,8 @@ api:
   backoff_factor: 2.0
   
 rate_limiting:
-  requests_per_second: 2
-  burst_requests: 5
+  requests_per_second: 4
+  burst_requests: 10
   rate_limit_status_code: 429
   
 years:

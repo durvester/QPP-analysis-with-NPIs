@@ -52,7 +52,7 @@ class OrganizationRecord(BaseModel):
     year: int
     org_index: int  # Index within organizations array for this provider
     
-    TIN: str
+    TIN: Optional[str]
     prvdrOrgName: Optional[str] = None
     isFacilityBased: Optional[bool] = None
     addressLineOne: Optional[str] = None

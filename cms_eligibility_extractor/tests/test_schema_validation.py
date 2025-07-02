@@ -212,7 +212,7 @@ class TestSchemaValidation:
         assert specialty.categoryReference == "Physicians"
     
     def test_missing_organization_tin(self):
-        """Test validation when required TIN is missing from organization."""
+        """Test validation when TIN is missing from organization (should be allowed since TIN is optional)."""
         data_missing_tin = {
             "data": {
                 "npi": "1234567890",
@@ -220,15 +220,18 @@ class TestSchemaValidation:
                 "lastName": "Doe",
                 "organizations": [
                     {
-                        # Missing TIN (required for organization)
+                        # Missing TIN (now optional for organization)
                         "prvdrOrgName": "Test Organization"
                     }
                 ]
             }
         }
         
-        with pytest.raises(ValueError):
-            EligibilityResponse(**data_missing_tin)
+        # Should not raise an error since TIN is optional
+        response = EligibilityResponse(**data_missing_tin)
+        assert response.data.npi == "1234567890"
+        assert response.data.organizations[0].TIN is None
+        assert response.data.organizations[0].prvdrOrgName == "Test Organization"
     
     def test_extra_fields_allowed(self):
         """Test that extra fields are allowed (for future API versions)."""
