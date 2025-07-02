@@ -87,12 +87,16 @@ class NPIReader:
                 sample = f.read(1024)
                 f.seek(0)
                 sniffer = csv.Sniffer()
-                delimiter = sniffer.sniff(sample).delimiter
+                try:
+                    delimiter = sniffer.sniff(sample).delimiter
+                except csv.Error:
+                    # Default to comma if sniffer fails
+                    delimiter = ','
                 
                 reader = csv.DictReader(f, delimiter=delimiter)
                 
                 # Validate that NPI column exists
-                if self.npi_column not in reader.fieldnames:
+                if reader.fieldnames is None or self.npi_column not in reader.fieldnames:
                     available_columns = ', '.join(reader.fieldnames or [])
                     raise ValueError(
                         f"NPI column '{self.npi_column}' not found. "

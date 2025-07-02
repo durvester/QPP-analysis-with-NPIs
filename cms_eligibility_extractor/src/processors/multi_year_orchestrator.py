@@ -5,6 +5,8 @@ Multi-year orchestrator for coordinating CMS API data extraction across years.
 import logging
 import time
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 from datetime import datetime
@@ -135,6 +137,7 @@ class MultiYearOrchestrator:
         }
         
         # Set up progress tracking
+        pbar = None
         if progress_callback is None:
             pbar = tqdm(total=len(self.npis), desc=f"Processing {year}")
             progress_callback = lambda current, total, npi: pbar.update(1)
@@ -232,7 +235,8 @@ class MultiYearOrchestrator:
         self, 
         progress_callback: Optional[Callable] = None,
         save_raw_responses: bool = True,
-        checkpoint_interval: int = 1000
+        checkpoint_interval: int = 1000,
+        parallel: bool = True
     ) -> Dict[int, Dict[str, Any]]:
         """
         Process all configured years.
@@ -241,26 +245,25 @@ class MultiYearOrchestrator:
             progress_callback: Optional progress callback function
             save_raw_responses: Whether to save raw JSON responses
             checkpoint_interval: Save checkpoint every N NPIs
+            parallel: Whether to process years in parallel (default: True)
             
         Returns:
             Processing results for all years
         """
         self.orchestrator_stats['start_time'] = datetime.now()
-        logger.info(f"Starting multi-year processing for years: {self.years}")
+        logger.info(f"Starting multi-year processing for years: {self.years} (parallel={parallel})")
         
         all_results = {}
         
         try:
-            for year in self.years:
-                year_results = self.process_year(
-                    year, 
-                    progress_callback=progress_callback,
-                    save_raw_responses=save_raw_responses,
-                    checkpoint_interval=checkpoint_interval
+            if parallel and len(self.years) > 1:
+                all_results = self._process_years_parallel(
+                    progress_callback, save_raw_responses, checkpoint_interval
                 )
-                all_results[year] = year_results
-                
-                logger.info(f"Completed year {year}, moving to next year...")
+            else:
+                all_results = self._process_years_sequential(
+                    progress_callback, save_raw_responses, checkpoint_interval
+                )
         
         except Exception as e:
             logger.error(f"Error during multi-year processing: {e}")
@@ -277,6 +280,87 @@ class MultiYearOrchestrator:
         self._save_processing_summary(all_results)
         
         logger.info("Multi-year processing completed")
+        return all_results
+    
+    def _process_years_sequential(
+        self, 
+        progress_callback: Optional[Callable],
+        save_raw_responses: bool,
+        checkpoint_interval: int
+    ) -> Dict[int, Dict[str, Any]]:
+        """Process years sequentially (original method)."""
+        all_results = {}
+        
+        for year in self.years:
+            logger.info(f"Starting processing for year {year}")
+            year_results = self.process_year(
+                year, 
+                progress_callback=progress_callback,
+                save_raw_responses=save_raw_responses,
+                checkpoint_interval=checkpoint_interval
+            )
+            all_results[year] = year_results
+            logger.info(f"Completed year {year}, moving to next year...")
+        
+        return all_results
+    
+    def _process_years_parallel(
+        self, 
+        progress_callback: Optional[Callable],
+        save_raw_responses: bool,
+        checkpoint_interval: int
+    ) -> Dict[int, Dict[str, Any]]:
+        """Process years in parallel using ThreadPoolExecutor."""
+        all_results = {}
+        
+        # Create progress bars for each year
+        year_progress_bars = {}
+        if progress_callback is None:
+            for year in self.years:
+                year_progress_bars[year] = tqdm(
+                    total=len(self.npis), 
+                    desc=f"Year {year}", 
+                    position=self.years.index(year)
+                )
+        
+        def year_progress_callback(year: int):
+            """Create a progress callback for a specific year."""
+            if progress_callback:
+                return progress_callback
+            else:
+                return lambda current, total, npi: year_progress_bars[year].update(1)
+        
+        try:
+            # Process years in parallel with thread pool
+            with ThreadPoolExecutor(max_workers=len(self.years)) as executor:
+                # Submit all year processing tasks
+                future_to_year = {
+                    executor.submit(
+                        self.process_year,
+                        year,
+                        progress_callback=year_progress_callback(year),
+                        save_raw_responses=save_raw_responses,
+                        checkpoint_interval=checkpoint_interval
+                    ): year for year in self.years
+                }
+                
+                # Collect results as they complete
+                for future in as_completed(future_to_year):
+                    year = future_to_year[future]
+                    try:
+                        year_results = future.result()
+                        all_results[year] = year_results
+                        logger.info(f"Completed year {year}")
+                    except Exception as e:
+                        logger.error(f"Error processing year {year}: {e}")
+                        raise
+        
+        finally:
+            # Close progress bars
+            for pbar in year_progress_bars.values():
+                if hasattr(pbar, 'close'):
+                    pbar.close()
+        
         return all_results
     
     def _save_checkpoint(

@@ -9,7 +9,7 @@ openpyxl>=3.1.2
 xlsxwriter>=3.1.9
 
 # Database dependencies
-sqlite3
+# sqlite3 is built into Python
 
 # Configuration and logging
 PyYAML>=6.0.1
