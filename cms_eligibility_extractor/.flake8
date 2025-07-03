@@ -1,0 +1,57 @@
+[flake8]
+max-line-length = 100
+max-complexity = 10
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info,
+    .venv,
+    .env,
+    venv,
+    env,
+    .mypy_cache,
+    .pytest_cache,
+    htmlcov,
+    temp_uploads,
+    temp_outputs,
+    outputs,
+    migrations
+
+# Error codes to ignore
+ignore = 
+    E203,  # whitespace before ':' (conflicts with Black)
+    W503,  # line break before binary operator (conflicts with Black)
+    E501,  # line too long (handled by Black)
+    D100,  # Missing docstring in public module
+    D101,  # Missing docstring in public class
+    D102,  # Missing docstring in public method
+    D103,  # Missing docstring in public function
+    D104,  # Missing docstring in public package
+    D105,  # Missing docstring in magic method
+    D106,  # Missing docstring in public nested class
+    D107,  # Missing docstring in __init__
+
+# Select specific error codes to check
+select = 
+    E,    # pycodestyle errors
+    W,    # pycodestyle warnings
+    F,    # pyflakes
+    C,    # mccabe complexity
+    B,    # flake8-bugbear
+    I,    # flake8-import-order
+    N,    # pep8-naming
+    S,    # flake8-bandit
+
+# Per-file ignores
+per-file-ignores =
+    __init__.py:F401,F403
+    tests/*:S101,S106,S108,S311,S605,S607
+    */migrations/*:E501,F401,F403
+    setup.py:E501
+    conftest.py:F401,F403
+
+# Import order settings
+import-order-style = google
+application-import-names = src,web

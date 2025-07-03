@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Results for Job {{ job_id[:8] }} - CMS QPP Data Extractor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <!-- Job Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Processing Results Summary
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <h3 class="text-primary mb-2">{{ job.stats.orchestrator_stats.total_npis }}</h3>
+                            <p class="mb-0"><strong>Total NPIs Processed</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <h3 class="text-success mb-2">{{ job.stats.orchestrator_stats.total_api_calls }}</h3>
+                            <p class="mb-0"><strong>API Calls Made</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <h3 class="text-info mb-2">{{ "%.1f"|format(job.stats.api_client_stats.success_rate) }}%</h3>
+                            <p class="mb-0"><strong>Success Rate</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card text-center">
+                            <h3 class="text-warning mb-2">{{ "%.1f"|format(job.stats.orchestrator_stats.total_processing_time / 60) }}</h3>
+                            <p class="mb-0"><strong>Minutes</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Year-by-Year Breakdown -->
+        {% if job.stats.year_summaries %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Year-by-Year Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for year, summary in job.stats.year_summaries.items() %}
+                    <div class="col-lg-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">Year {{ year }}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h5 class="text-success">{{ summary.successful_count }}</h5>
+                                        <small>Successful</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h5 class="text-danger">{{ summary.failed_count }}</h5>
+                                        <small>Failed</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <small class="text-muted">
+                                    Processing time: {{ "%.1f"|format(summary.processing_time / 60) }} minutes
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Data Export Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-export me-2"></i>
+                    Generated Data Files
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if job.output_files %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-file-csv me-2"></i>File Name</th>
+                                <th><i class="fas fa-info-circle me-2"></i>Description</th>
+                                <th><i class="fas fa-calendar me-2"></i>Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for filename in job.output_files %}
+                            <tr>
+                                <td>
+                                    <code>{{ filename }}</code>
+                                </td>
+                                <td>
+                                    {% if 'providers' in filename %}
+                                        <span class="badge bg-primary me-2">Core Data</span>
+                                        Healthcare provider basic information and eligibility details
+                                    {% elif 'organizations' in filename %}
+                                        <span class="badge bg-info me-2">Organizations</span>
+                                        Organization affiliations and group practice information
+                                    {% elif 'individual_scenarios' in filename %}
+                                        <span class="badge bg-success me-2">Individual</span>
+                                        Individual provider MIPS performance scenarios
+                                    {% elif 'group_scenarios' in filename %}
+                                        <span class="badge bg-warning me-2">Group</span>
+                                        Group practice MIPS performance scenarios
+                                    {% elif 'apms' in filename %}
+                                        <span class="badge bg-purple me-2">APMs</span>
+                                        Alternative Payment Model participation data
+                                    {% elif 'data_dictionary' in filename %}
+                                        <span class="badge bg-secondary me-2">Reference</span>
+                                        Field definitions and data dictionary
+                                    {% elif 'export_summary' in filename %}
+                                        <span class="badge bg-dark me-2">Summary</span>
+                                        Export process summary and statistics
+                                    {% else %}
+                                        <span class="badge bg-light text-dark me-2">Data</span>
+                                        Extracted data file
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if filename | regex_search('_(\\d{4})\\.csv$') %}
+                                        <span class="badge bg-outline-primary">{{ filename | regex_search('_(\\d{4})\\.csv$') | first }}</span>
+                                    {% elif 'data_dictionary' in filename or 'export_summary' in filename %}
+                                        <span class="badge bg-outline-secondary">All Years</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No output files were generated.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- API Performance Stats -->
+        {% if job.stats.api_client_stats %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    API Performance Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h6>Request Statistics</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Total Requests:</strong> {{ job.stats.api_client_stats.total_requests }}</li>
+                                <li><strong>Successful:</strong> 
+                                    <span class="text-success">{{ job.stats.api_client_stats.successful_requests }}</span>
+                                </li>
+                                <li><strong>Failed:</strong> 
+                                    <span class="text-danger">{{ job.stats.api_client_stats.failed_requests }}</span>
+                                </li>
+                                <li><strong>Success Rate:</strong> 
+                                    <span class="badge bg-{% if job.stats.api_client_stats.success_rate >= 90 %}success{% elif job.stats.api_client_stats.success_rate >= 70 %}warning{% else %}danger{% endif %}">
+                                        {{ "%.1f"|format(job.stats.api_client_stats.success_rate) }}%
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h6>Response Times</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Average:</strong> {{ "%.2f"|format(job.stats.api_client_stats.average_response_time) }}s</li>
+                                <li><strong>Total API Time:</strong> {{ "%.1f"|format(job.stats.api_client_stats.total_request_time / 60) }} minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Download Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    Download Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Download all generated CSV files as a ZIP archive. The archive contains structured data 
+                    ready for analysis, including provider information, organizational data, and performance metrics.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.download_results', job_id=job_id) }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-download me-2"></i>Download ZIP Archive
+                    </a>
+                    <a href="{{ url_for('main.job_status', job_id=job_id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Job Status
+                    </a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>Process New File
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add custom styling for purple badge (APMs)
+    const style = document.createElement('style');
+    style.textContent = `
+        .bg-purple {
+            background-color: #6f42c1 !important;
+        }
+        .bg-outline-primary {
+            background-color: transparent;
+            border: 1px solid #0d6efd;
+            color: #0d6efd;
+        }
+        .bg-outline-secondary {
+            background-color: transparent;
+            border: 1px solid #6c757d;
+            color: #6c757d;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}
