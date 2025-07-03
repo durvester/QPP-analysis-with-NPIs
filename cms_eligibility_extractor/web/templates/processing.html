@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Job {{ job_id[:8] }} - CMS QPP Data Extractor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Job Header -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Job Status: {{ job_id[:8] }}
+                </h4>
+                <span class="badge status-badge 
+                    {% if job.status == 'pending' %}bg-secondary
+                    {% elif job.status == 'processing' %}bg-warning
+                    {% elif job.status == 'completed' %}bg-success
+                    {% elif job.status == 'failed' %}bg-danger
+                    {% endif %}">
+                    {{ job.status.title() }}
+                </span>
+            </div>
+            <div class="card-body">
+                <!-- Progress Bar -->
+                {% if job.progress %}
+                <div class="progress-container">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Progress:</span>
+                        <span class="badge bg-info">
+                            {{ job.progress.current }} / {{ job.progress.total }}
+                        </span>
+                    </div>
+                    
+                    <div class="progress mb-2" style="height: 20px;">
+                        {% set progress_percent = (job.progress.current / job.progress.total * 100) if job.progress.total > 0 else 0 %}
+                        <div class="progress-bar 
+                            {% if job.status == 'processing' %}progress-bar-striped progress-bar-animated{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ progress_percent }}%"
+                            aria-valuenow="{{ progress_percent }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ "%.1f"|format(progress_percent) }}%
+                        </div>
+                    </div>
+                    
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {{ job.progress.message }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Job Configuration -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h6><i class="fas fa-cog me-2"></i>Configuration</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Years:</strong> {{ ', '.join(job.config.years | map('string')) }}</li>
+                                <li><strong>Batch Size:</strong> {{ job.config.batch_size }}</li>
+                                <li><strong>Save Raw:</strong> 
+                                    <span class="badge bg-{% if job.config.save_raw_responses %}success{% else %}secondary{% endif %}">
+                                        {{ 'Yes' if job.config.save_raw_responses else 'No' }}
+                                    </span>
+                                </li>
+                                <li><strong>Parallel:</strong> 
+                                    <span class="badge bg-{% if job.config.parallel_processing %}success{% else %}secondary{% endif %}">
+                                        {{ 'Yes' if job.config.parallel_processing else 'No' }}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="stats-card">
+                            <h6><i class="fas fa-clock me-2"></i>Timing</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Created:</strong> {{ job.created_at[:19] if job.created_at else 'N/A' }}</li>
+                                {% if job.started_at %}
+                                <li><strong>Started:</strong> {{ job.started_at[:19] }}</li>
+                                {% endif %}
+                                {% if job.completed_at %}
+                                <li><strong>Completed:</strong> {{ job.completed_at[:19] }}</li>
+                                {% endif %}
+                                {% if job.failed_at %}
+                                <li><strong>Failed:</strong> {{ job.failed_at[:19] }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                {% if job.status == 'failed' and job.error_message %}
+                <div class="alert alert-danger mt-3">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Error Details</h6>
+                    <p class="mb-0">{{ job.error_message }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Statistics (for completed jobs) -->
+                {% if job.status == 'completed' and job.stats %}
+                <div class="mt-4">
+                    <h6><i class="fas fa-chart-bar me-2"></i>Processing Statistics</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stats-card text-center">
+                                <h4 class="text-primary">{{ job.stats.orchestrator_stats.total_npis }}</h4>
+                                <p class="mb-0">Total NPIs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card text-center">
+                                <h4 class="text-success">{{ job.stats.orchestrator_stats.total_api_calls }}</h4>
+                                <p class="mb-0">API Calls</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stats-card text-center">
+                                <h4 class="text-info">{{ "%.1f"|format(job.stats.api_client_stats.success_rate) }}%</h4>
+                                <p class="mb-0">Success Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Output Files (for completed jobs) -->
+                {% if job.status == 'completed' and job.output_files %}
+                <div class="mt-4">
+                    <h6><i class="fas fa-file-csv me-2"></i>Generated Files</h6>
+                    <div class="list-group">
+                        {% for filename in job.output_files %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-file-csv me-2 text-success"></i>
+                                {{ filename }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">CSV</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="mt-4 d-flex gap-2">
+                    {% if job.status == 'processing' or job.status == 'pending' %}
+                    <form method="POST" class="d-inline">
+                        {{ form.hidden_tag() }}
+                        {{ form.refresh(class="btn btn-outline-primary") }}
+                    </form>
+                    {% endif %}
+                    
+                    {% if job.status == 'completed' %}
+                    <a href="{{ url_for('main.download_results', job_id=job_id) }}" class="btn btn-success">
+                        <i class="fas fa-download me-2"></i>Download Results
+                    </a>
+                    <a href="{{ url_for('main.results', job_id=job_id) }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-line me-2"></i>View Details
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-plus me-2"></i>New Job
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh for processing jobs
+    const jobStatus = '{{ job.status }}';
+    
+    if (jobStatus === 'processing' || jobStatus === 'pending') {
+        // Poll for updates every 3 seconds
+        setInterval(function() {
+            fetch('{{ url_for("main.api_job_status", job_id=job_id) }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== jobStatus) {
+                        // Status changed, reload page
+                        location.reload();
+                    } else {
+                        // Update progress if available
+                        if (data.progress) {
+                            updateProgress(data.progress);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling job status:', error);
+                });
+        }, 3000);
+    }
+});
+
+function updateProgress(progress) {
+    const progressBar = document.querySelector('.progress-bar');
+    const progressText = document.querySelector('.text-muted');
+    const progressBadge = document.querySelector('.badge.bg-info');
+    
+    if (progressBar && progress.total > 0) {
+        const percent = (progress.current / progress.total) * 100;
+        progressBar.style.width = percent + '%';
+        progressBar.textContent = percent.toFixed(1) + '%';
+        progressBar.setAttribute('aria-valuenow', percent);
+    }
+    
+    if (progressText && progress.message) {
+        progressText.innerHTML = '<i class="fas fa-info-circle me-1"></i>' + progress.message;
+    }
+    
+    if (progressBadge) {
+        progressBadge.textContent = progress.current + ' / ' + progress.total;
+    }
+}
+</script>
+{% endblock %}

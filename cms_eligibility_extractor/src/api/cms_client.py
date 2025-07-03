@@ -305,11 +305,43 @@ class CMSEligibilityClient:
         
         # Calculate derived statistics
         if stats['total_requests'] > 0:
-            stats['success_rate'] = stats['successful_requests'] / stats['total_requests']
+            # Technical success rate: excludes valid business responses (404s)
+            technical_failures = (stats['failed_requests'] + stats['bad_request_errors'] + 
+                                 stats['rate_limit_errors'] + stats['server_errors'] + 
+                                 stats['connection_errors'])
+            technical_successes = stats['total_requests'] - technical_failures
+            stats['technical_success_rate'] = technical_successes / stats['total_requests']
+            
+            # Data retrieval success rate: successful data retrievals / total requests
+            stats['data_success_rate'] = stats['successful_requests'] / stats['total_requests']
+            
+            # Legacy success rate for backward compatibility
+            stats['success_rate'] = stats['data_success_rate']
+            
+            # Request processing success rate: excludes 404s (NPIs not in system)
+            valid_requests = stats['total_requests'] - stats['not_found_requests']
+            if valid_requests > 0:
+                stats['processing_success_rate'] = stats['successful_requests'] / valid_requests
+            else:
+                stats['processing_success_rate'] = 0.0
+            
+            # Average request time
             stats['average_request_time'] = stats['total_processing_time'] / stats['total_requests']
+            
+            # Response distribution percentages
+            stats['success_percentage'] = (stats['successful_requests'] / stats['total_requests']) * 100
+            stats['not_found_percentage'] = (stats['not_found_requests'] / stats['total_requests']) * 100
+            stats['error_percentage'] = (technical_failures / stats['total_requests']) * 100
+            
         else:
+            stats['technical_success_rate'] = 0.0
+            stats['data_success_rate'] = 0.0
             stats['success_rate'] = 0.0
+            stats['processing_success_rate'] = 0.0
             stats['average_request_time'] = 0.0
+            stats['success_percentage'] = 0.0
+            stats['not_found_percentage'] = 0.0
+            stats['error_percentage'] = 0.0
             
         return stats
     

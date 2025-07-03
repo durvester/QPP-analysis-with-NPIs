@@ -33,3 +33,13 @@ tqdm>=4.66.0
 
 # Data validation
 jsonschema>=4.20.0
+
+# Web application dependencies
+Flask>=2.3.0
+Flask-WTF>=1.2.0
+Werkzeug>=2.3.0
+
+# Optional: Background job processing (for production)
+# celery>=5.3.0
+# redis>=5.0.0
+# flask-socketio>=5.3.0

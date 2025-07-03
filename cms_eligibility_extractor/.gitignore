@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+test_venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application specific
+outputs/
+temp_uploads/
+temp_outputs/
+*.log
+logs/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment and secrets
+.env
+secrets.yaml
+*.key
+*.pem
+
+# Test files and temporary data
+test_*.py
+test_workflow.py
+TESTING_RESULTS.md
+WEB_APP_README.md
+small_npi_test.csv
+test_npis.csv
+
+# Development tools
+bandit-report.json
+safety-report.json
+coverage.xml
+test-results.xml
+
+# Docker
+.dockerignore
+docker-compose.override.yml

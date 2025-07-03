@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Upload NPI File - CMS QPP Data Extractor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload NPI CSV File
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <p class="text-muted">
+                        Upload a CSV file containing National Provider Identifiers (NPIs) to extract healthcare 
+                        provider eligibility information from the CMS Quality Payment Program API.
+                    </p>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- File Upload Section -->
+                    <div class="mb-4">
+                        <label for="{{ form.npi_file.id }}" class="form-label">
+                            <strong>{{ form.npi_file.label.text }}</strong>
+                        </label>
+                        
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <p class="mb-2">Click to select a CSV file or drag and drop</p>
+                            <p class="text-muted small">Maximum file size: 50MB</p>
+                            {{ form.npi_file(class="form-control", style="display: none;", accept=".csv") }}
+                        </div>
+                        
+                        {% if form.npi_file.errors %}
+                            <div class="text-danger mt-2">
+                                {% for error in form.npi_file.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-2" id="selectedFileInfo" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="fas fa-file-csv me-2"></i>
+                                <span id="fileName"></span>
+                                <span class="badge bg-secondary ms-2" id="fileSize"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Configuration -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <strong>{{ form.years.label.text }}</strong>
+                                </label>
+                                <div class="form-check-container">
+                                    {% for value, label in form.years.choices %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="{{ form.years.name }}" 
+                                                   value="{{ value }}" 
+                                                   id="year_{{ value }}"
+                                                   {% if value in form.years.default %}checked{% endif %}>
+                                            <label class="form-check-label" for="year_{{ value }}">
+                                                {{ label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.years.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.years.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.batch_size.id }}" class="form-label">
+                                    <strong>{{ form.batch_size.label.text }}</strong>
+                                </label>
+                                {{ form.batch_size(class="form-control") }}
+                                <div class="form-text">{{ form.batch_size.description }}</div>
+                                {% if form.batch_size.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.batch_size.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Options -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Processing Options</strong></label>
+                        
+                        <div class="form-check">
+                            {{ form.save_raw_responses(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.save_raw_responses.id }}">
+                                {{ form.save_raw_responses.label.text }}
+                            </label>
+                            <div class="form-text">{{ form.save_raw_responses.description }}</div>
+                        </div>
+                        
+                        <div class="form-check">
+                            {{ form.parallel_processing(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ form.parallel_processing.id }}">
+                                {{ form.parallel_processing.label.text }}
+                            </label>
+                            <div class="form-text">{{ form.parallel_processing.description }}</div>
+                        </div>
+                    </div>
+
+                    <!-- CSV File Format Requirements -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>CSV File Requirements</h6>
+                        <ul class="mb-0">
+                            <li>File must contain a column named 'npi', 'npis', or 'npi_number'</li>
+                            <li>NPIs must be 10-digit numbers (e.g., 1234567890)</li>
+                            <li>File should be UTF-8 encoded</li>
+                            <li>Maximum file size: 50MB</li>
+                        </ul>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary btn-lg", id="submitBtn") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('{{ form.npi_file.id }}');
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const selectedFileInfo = document.getElementById('selectedFileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // File upload area click handler
+    fileUploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            displayFileInfo(file);
+        }
+    });
+
+    // Drag and drop handlers
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.add('drag-over');
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.remove('drag-over');
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+                fileInput.files = files;
+                displayFileInfo(file);
+            } else {
+                alert('Please select a CSV file.');
+            }
+        }
+    });
+
+    // Display file information
+    function displayFileInfo(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        selectedFileInfo.style.display = 'block';
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form submission handler
+    uploadForm.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting Processing...';
+    });
+});
+</script>
+{% endblock %}
